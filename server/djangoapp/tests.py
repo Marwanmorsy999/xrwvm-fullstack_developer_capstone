@@ -1,34 +1,48 @@
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
 import json
+from unittest.mock import patch
 
 
 class DealershipApiTests(TestCase):
     def setUp(self):
         self.client = Client()
 
-    def test_get_dealers(self):
+    @patch('djangoapp.views.get_request')
+    def test_get_dealers(self, mock_get_request):
+        mock_get_request.return_value = {'status': 200, 'dealers': []}
         response = self.client.get('/djangoapp/get_dealers')
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertIn('status', data)
         self.assertIn('dealers', data)
 
-    def test_get_dealers_by_state(self):
+    @patch('djangoapp.views.get_request')
+    def test_get_dealers_by_state(self, mock_get_request):
+        mock_get_request.return_value = {'status': 200, 'dealers': []}
         response = self.client.get('/djangoapp/get_dealers/Texas')
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertIn('status', data)
         self.assertIn('dealers', data)
 
-    def test_get_dealer_details(self):
+    @patch('djangoapp.views.get_request')
+    def test_get_dealer_details(self, mock_get_request):
+        mock_get_request.return_value = {'status': 200, 'dealer': []}
         response = self.client.get('/djangoapp/dealer/15')
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
         self.assertIn('status', data)
         self.assertIn('dealer', data)
 
-    def test_get_dealer_reviews(self):
+    @patch('djangoapp.views.get_request')
+    @patch('djangoapp.views.analyze_review_sentiments')
+    def test_get_dealer_reviews(self, mock_analyze, mock_get_request):
+        mock_get_request.return_value = [
+            {'review': 'Great service!', 'sentiment': 'positive'},
+            {'review': 'Bad experience', 'sentiment': 'negative'}
+        ]
+        mock_analyze.return_value = {'sentiment': 'positive'}
         response = self.client.get('/djangoapp/reviews/dealer/15')
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.content)
