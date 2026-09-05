@@ -16,11 +16,14 @@ function captureScreen(filePath) {
     $bitmap = New-Object System.Drawing.Bitmap($screen.Width, $screen.Height)
     $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
     $graphics.CopyFromScreen($screen.Location, [System.Drawing.Point]::Empty, $screen.Size)
-    $bitmap.Save("${filePath.replace(/\\/g, '\\\\')}")
+    $bitmap.Save('${filePath.replace(/'/g, "''")}')
     $graphics.Dispose()
     $bitmap.Dispose()
   `;
-  execSync(`powershell -Command "${psScript.replace(/"/g, '\\"')}"`, { encoding: 'utf8' });
+  const ps1Path = path.join(screenshotDir, '_capture.ps1');
+  fs.writeFileSync(ps1Path, psScript, 'utf8');
+  execSync(`powershell -ExecutionPolicy Bypass -File "${ps1Path}"`, { encoding: 'utf8' });
+  fs.unlinkSync(ps1Path);
 }
 
 (async () => {
@@ -30,11 +33,35 @@ function captureScreen(filePath) {
 
   const baseUrl = 'http://localhost:8000';
 
+  // Clear any existing session/cookies
+  await context.clearCookies();
+
   // Task 17: get_dealers.png - dealers on home page before logging in
   await page.goto(baseUrl);
   await page.waitForTimeout(2000);
   captureScreen(path.join(screenshotDir, 'get_dealers.png'));
   console.log('Captured get_dealers.png');
+
+  // Task 12: admin_login.png - root successfully logged into admin
+  await page.goto(baseUrl + '/admin');
+  await page.waitForTimeout(1000);
+  await page.fill('input[name="username"]', 'root');
+  await page.fill('input[name="password"]', 'rootpass');
+  await page.click('input[type="submit"]');
+  await page.waitForTimeout(2000);
+  captureScreen(path.join(screenshotDir, 'admin_login.png'));
+  console.log('Captured admin_login.png');
+
+  // Task 13: admin_logout.png - root logged out from admin
+  await page.goto(baseUrl + '/admin');
+  await page.waitForTimeout(1000);
+  const logoutLink = page.locator('a:has-text("Log out")');
+  if (await logoutLink.count() > 0) {
+    await logoutLink.click();
+    await page.waitForTimeout(1000);
+  }
+  captureScreen(path.join(screenshotDir, 'admin_logout.png'));
+  console.log('Captured admin_logout.png');
 
   // Task 18: get_dealers_loggedin.png - after login
   await page.goto(baseUrl + '/login');
@@ -79,19 +106,6 @@ function captureScreen(filePath) {
   await page.waitForTimeout(4000);
   captureScreen(path.join(screenshotDir, 'added_review.png'));
   console.log('Captured added_review.png');
-
-  // Admin login screenshot
-  await page.goto(baseUrl + '/admin');
-  await page.waitForTimeout(1000);
-  await page.fill('input[name="username"]', 'root');
-  await page.fill('input[name="password"]', 'rootpass');
-  captureScreen(path.join(screenshotDir, 'admin_login.png'));
-  console.log('Captured admin_login.png');
-
-  await page.click('input[type="submit"]');
-  await page.waitForTimeout(2000);
-  captureScreen(path.join(screenshotDir, 'admin_logout.png'));
-  console.log('Captured admin_logout.png');
 
   // Deployment screenshots (local with address bar)
   await page.goto(baseUrl);

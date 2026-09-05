@@ -45,7 +45,8 @@ const Dealers = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     get_dealers();
-  },[]);  
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]);
 
 
 let isLoggedIn = sessionStorage.getItem("username") != null ? true : false;

@@ -7,6 +7,62 @@ on:
     branches: [ main ]
 
 jobs:
+  lint-python:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+
+    - name: Install Python dependencies
+      run: |
+        cd server
+        pip install -r requirements.txt
+
+    - name: Lint Python files
+      run: |
+        cd server
+        python -m py_compile manage.py
+        python -m py_compile djangoapp/views.py
+        python -m py_compile djangoapp/urls.py
+        python -m py_compile djangoapp/restapis.py
+        python -m py_compile djangoapp/models.py
+        python -m py_compile djangoapp/populate.py
+
+  lint-javascript:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ['18']
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: server/frontend/package-lock.json
+
+    - name: Install frontend dependencies
+      run: |
+        cd server/frontend
+        npm ci
+
+    - name: Lint JavaScript files
+      run: |
+        cd server/frontend
+        npx eslint src/
+
   test:
     runs-on: ubuntu-latest
     strategy:
