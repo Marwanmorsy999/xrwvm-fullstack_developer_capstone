@@ -1,0 +1,3 @@
+curl.exe -s -X GET http://localhost:8000/djangoapp/logout
+
+{"userName": ""}

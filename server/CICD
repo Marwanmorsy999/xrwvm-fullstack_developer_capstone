@@ -1,0 +1,96 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+
+    - name: Install Python dependencies
+      run: |
+        cd server
+        pip install -r requirements.txt
+
+    - name: Run Django tests
+      run: |
+        cd server
+        python manage.py test
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: server/frontend/package-lock.json
+
+    - name: Install frontend dependencies
+      run: |
+        cd server/frontend
+        npm ci
+
+    - name: Build React app
+      run: |
+        cd server/frontend
+        npm run build
+
+    - name: Run Django migrations
+      run: |
+        cd server
+        python manage.py makemigrations --noinput
+        python manage.py migrate --noinput
+        python manage.py collectstatic --noinput
+
+  build-and-push:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./server
+        push: true
+        tags: ${{ secrets.DOCKER_USERNAME }}/dealership-app:latest
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Deploy to IBM Cloud Code Engine
+      uses: IBM/ce-deploy-action@v2
+      with:
+        api_key: ${{ secrets.IBM_CLOUD_API_KEY }}
+        crn: ${{ secrets.IBM_CLOUD_CRN }}
+        project_name: ${{ secrets.IBM_CLOUD_PROJECT }}
+        image: ${{ secrets.DOCKER_USERNAME }}/dealership-app:latest
+        port: 8000

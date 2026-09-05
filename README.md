@@ -1,4 +1,14 @@
-# Car Dealership Application - Full Stack Capstone Project
+# Cars Dealership - Full Stack Capstone Project
+
+A comprehensive full-stack web application for Cars Dealership, a national car retailer in the U.S. This capstone project was developed for IBM's Full Stack Developer Professional Certificate program on Coursera.
+
+## Project Details
+
+- **Project Name**: Cars Dealership Web Application
+- **Course**: IBM Full Stack Software Developer Professional Certificate
+- **Platform**: Coursera
+- **Project Type**: Full Stack Application Development Capstone
+- **Technologies**: React, Django, Flask, Node.js, MongoDB, SQLite, Docker, Kubernetes, IBM Cloud Code Engine
 
 ![Python](https://img.shields.io/badge/python-v3.12-blue.svg)
 ![Django](https://img.shields.io/badge/django-v3.2.5-green.svg)
