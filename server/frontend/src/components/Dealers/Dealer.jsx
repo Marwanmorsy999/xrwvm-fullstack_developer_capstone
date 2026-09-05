@@ -56,6 +56,7 @@ const Dealer = () => {
     return icon;
   }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     get_dealer();
     get_reviews();

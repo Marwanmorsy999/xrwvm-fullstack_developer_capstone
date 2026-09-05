@@ -42,6 +42,7 @@ const Dealers = () => {
       setDealersList(all_dealers)
     }
   }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     get_dealers();
   },[]);  

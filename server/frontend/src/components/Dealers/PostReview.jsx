@@ -84,6 +84,7 @@ const PostReview = () => {
     let carmodelsarr = Array.from(retobj.CarModels)
     setCarmodels(carmodelsarr)
   }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     get_dealer();
     get_cars();
